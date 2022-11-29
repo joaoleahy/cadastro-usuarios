@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+<ui:composition template="/layout/template.xhtml">
+	<ui:define name="content">
+		<p:panel header="Listar usuários">
+			<h:form>
+				<p:commandButton value="Novo usuário"
+					action="#{usuarioBean.prepararCadastro}" ajax="false">
+				</p:commandButton>
+				<p:commandButton value="Mesma Página"
+					action="#{usuarioBean.prepararList}">
+				</p:commandButton>
+			</h:form>
+
+			<h:form prependId="false">
+				<p:inputText value="#{usuarioBean.filtro}">
+					<p:ajax event="blur" listener="#{usuarioBean.filtrarTabela}"
+						update="tableUsuarios" />
+				</p:inputText>
+				<p:dataTable id="tableUsuarios" widgetVar="table"
+					value="#{usuarioBean.listUsuario}" var="usuario1" paginator="true"
+					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15" reflow="true" scrollable="true">
+					<f:facet name="header">
+						<h:outputText value="Usuários" />
+					</f:facet>
+
+					<p:column headerText="Nome">
+						<h:outputText value="#{usuario1.nome}" />
+					</p:column>
+					<p:column headerText="email">
+						<h:outputText value="#{usuario1.email}" />
+					</p:column>
+					<p:column headerText="CPF">
+						<h:outputText value="#{usuario1.cpf}" />
+					</p:column>
+					
+					<p:column headerText="Ações">
+						<p:commandButton value="Editar" icon="fa fa-search"
+							action="#{usuarioBean.carregarDetalhes2(usuario1)}"
+							update=":formDialog:dialogDetalhes"
+							oncomplete="PF('dialogDetail').show()" />
+						<p:commandButton value="Remover" icon="fa fa-remove"
+							action="#{usuarioBean.deletar(usuario1)}" />
+					</p:column>
+					
+				</p:dataTable>
+			</h:form>
+			
+			
+			<h:form id="formDialog" prependId="false">
+				<p:dialog id="dialogDetalhes" widgetVar="dialogDetail" modal="true">
+					<p:panelGrid id="panelDetail" columns="1">
+							<p:outputLabel value="Nome:" for="nome" />
+					<p:inputText id="nome" value="#{usuarioBean.usuario.nome}">
+					</p:inputText>
+					<p:message for="nome" />
+					
+					<p:outputLabel value="Usuário:" for="username" />
+					<p:inputText id="username" value="#{usuarioBean.usuario.username}">
+					</p:inputText>
+					<p:message for="idade" />
+					
+					<p:outputLabel value="Idade:" for="idade" />
+					<p:inputText id="idade" value="#{usuarioBean.usuario.idade}">
+					</p:inputText>
+					<p:message for="idade" />
+
+					<p:outputLabel value="Email:" for="email" />
+					<p:inputText id="email" value="#{usuarioBean.usuario.email}">
+					</p:inputText>
+					<p:message for="email" />
+					
+					<p:outputLabel value="Tipo de Pessoa" for="tipo" />
+					<p:selectOneMenu id="tipo" value="#{usuarioBean.selectedPessoa}"
+						converter="pessoaConverter">
+						<f:selectItem itemLabel="Selecione..." noSelectionOption="true" />
+						<f:selectItems value="#{usuarioBean.listPessoa}" />
+						<p:ajax event="change" update="jvDiv" process="tipo" />
+					</p:selectOneMenu>
+					<p:message for="tipo" />
+					
+					<p:outputPanel id="jvDiv">
+					
+					<p:outputLabel value="CPF:" for="cpf" rendered="#{usuarioBean.selectedPessoa == 'PF'}" />
+					<p:inputMask mask="999.999.999-99" id="cpf" value="#{usuarioBean.usuario.cpf}" rendered="#{usuarioBean.selectedPessoa == 'PF'}">
+					</p:inputMask>
+					<p:message for="cpf" rendered="#{usuarioBean.selectedPessoa == 'PF'}" />
+					
+					<p:outputLabel value="CNPJ:" for="cnpj" rendered="#{usuarioBean.selectedPessoa == 'PJ'}" />
+					<p:inputMask mask="99.999.999/9999-99" id="cnpj" value="#{usuarioBean.usuario.cnpj}" rendered="#{usuarioBean.selectedPessoa == 'PJ'}">
+					</p:inputMask>
+					<p:message for="cnpj" rendered="#{usuarioBean.selectedPessoa == 'PJ'}" />
+					
+					
+					</p:outputPanel>
+					<p:outputLabel value="Password:" for="password" />
+					<p:password id="password" value="#{usuarioBean.usuario.password}">
+					</p:password>
+					<p:message for="password" />
+				<p:outputLabel value="CEP:" for="cep" />
+				<p:inputMask mask="99999-999" id="cep" value="#{usuarioBean.filtro2}">
+					<p:ajax event="change" listener="#{usuarioBean.filtrarTabela2}"
+						update="endereco jvEnderecoDiv jvEnderecoList"/>
+				</p:inputMask>
+				
+				<p:outputPanel id="jvEnderecoList">
+				<div style="display:#{usuarioBean.hide}">
+				<p:outputLabel value="Endereço" for="endereco" rendered="#{not empty usuarioBean.listEndereco}" />
+					<p:selectOneMenu id="endereco" value="#{usuarioBean.enderecoNome}" rendered="#{not empty usuarioBean.listEndereco}">
+						<f:selectItem itemLabel="Selecione..." noSelectionOption="true" />
+						<f:selectItems value="#{usuarioBean.listEndereco}" />
+					</p:selectOneMenu>
+				<p:message for="endereco" />
+				</div>
+					
+				</p:outputPanel>
+					
+					<p:outputPanel id="jvEnderecoDiv">
+					
+					<p:outputLabel value="Logradouro:" for="logradouro" rendered="#{usuarioBean.listEndereco.isEmpty()}" />
+					<p:inputText id="logradouro" value="#{usuarioBean.endereco.logradouro}" rendered="#{usuarioBean.listEndereco.isEmpty()}">
+					</p:inputText>
+					<p:message for="logradouro" rendered="#{usuarioBean.listEndereco.isEmpty()}" />
+					
+					<p:outputLabel value="Numero:" for="numero" rendered="#{usuarioBean.listEndereco.isEmpty()}"/>
+					<p:inputText id="numero" value="#{usuarioBean.endereco.numero}" rendered="#{usuarioBean.listEndereco.isEmpty()}">
+					</p:inputText>
+					<p:message for="numero" rendered="#{usuarioBean.listEndereco.isEmpty()}"/>
+						
+					<p:outputLabel value="Estado" for="estado" rendered="#{usuarioBean.listEndereco.isEmpty()}" />
+					<p:selectOneMenu id="estado" value="#{usuarioBean.endereco.estado}"
+						converter="estadoConverter" rendered="#{usuarioBean.listEndereco.isEmpty()}">
+						<f:selectItem itemLabel="Selecione..." noSelectionOption="true"  />
+						<f:selectItems value="#{enderecoBean.listEstados}" />
+						<p:ajax event="change" update="municipio"
+							listener="#{enderecoBean.carregarMunicipios(usuarioBean.endereco.estado)}" />
+					</p:selectOneMenu>
+					<p:message for="estado" rendered="#{usuarioBean.listEndereco.isEmpty()}"/>
+
+					<p:outputLabel value="Municipio" for="municipio" rendered="#{usuarioBean.listEndereco.isEmpty()}" />
+					<p:selectOneMenu id="municipio" value="#{usuarioBean.endereco.municipio}"
+						converter="cidadeConverter" rendered="#{usuarioBean.listEndereco.isEmpty()}">
+						<f:selectItem itemLabel="Selecione..." noSelectionOption="true" />
+						<f:selectItems value="#{enderecoBean.listMunicipios}" />
+					</p:selectOneMenu>
+					<p:message for="municipio" rendered="#{usuarioBean.listEndereco.isEmpty()}" />
+					
+					</p:outputPanel>
+
+					</p:panelGrid>
+						<p:commandButton value="Editar"
+					action="#{usuarioBean.editar(usuarioBean.usuario)}" ajax="false" />
+				</p:dialog>
+			</h:form>
+		</p:panel>
+	</ui:define>
+</ui:composition>
+</html>
